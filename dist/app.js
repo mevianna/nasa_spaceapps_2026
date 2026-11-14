@@ -42,7 +42,7 @@ async function analyze() {
     if (!values) throw new Error("A resposta não contém a variável solicitada.");
 
     const series = Object.entries(values)
-      .filter(([key, value]) => /^\d{6}$/.test(key) && Number.isFinite(value) && value > -900)
+      .filter(([key, value]) => isMonthlyRecordKey(key) && Number.isFinite(value) && value > -900)
       .map(([key, value]) => ({
         key,
         year: Number(key.slice(0, 4)),
@@ -79,9 +79,13 @@ function runAnalysis(series) {
 
   const features = standardize2D(adjusted.map(d => [d.residual, d.delta]));
   const scores = isolationForest(features, 72, Math.min(128, features.length), 2026);
-  const sortedScores = [...scores].sort((a, b) => b - a);
-  const threshold = sortedScores[Math.max(0, Math.ceil(scores.length * 0.05) - 1)];
-  adjusted.forEach((d, i) => { d.anomaly = scores[i] >= threshold; d.anomalyScore = scores[i]; });
+  const targetAnomalies = Math.max(1, Math.ceil(scores.length * 0.05));
+  const anomalyIndices = new Set(scores
+    .map((score, index) => ({ score, index }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .slice(0, targetAnomalies)
+    .map(item => item.index));
+  adjusted.forEach((d, i) => { d.anomaly = anomalyIndices.has(i); d.anomalyScore = scores[i]; });
 
   return { adjusted, regression, anomalyCount: adjusted.filter(d => d.anomaly).length };
 }
@@ -204,6 +208,11 @@ function setLoading(loading) {
 }
 
 function mean(values) { return values.reduce((a, b) => a + b, 0) / values.length; }
+function isMonthlyRecordKey(key) {
+  if (!/^\d{6}$/.test(key)) return false;
+  const month = Number(key.slice(4, 6));
+  return month >= 1 && month <= 12;
+}
 function shuffleIndices(n, random) {
   const a = Array.from({ length: n }, (_, i) => i);
   for (let i = n - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }

@@ -34,6 +34,11 @@ const context = {
 vm.createContext(context);
 vm.runInContext(fs.readFileSync("dist/app.js", "utf8"), context);
 
+assert.strictEqual(vm.runInContext('isMonthlyRecordKey("200101")', context), true, "regular month should be accepted");
+assert.strictEqual(vm.runInContext('isMonthlyRecordKey("200112")', context), true, "December should be accepted");
+assert.strictEqual(vm.runInContext('isMonthlyRecordKey("200113")', context), false, "NASA annual aggregate must not be treated as month 13");
+assert.strictEqual(vm.runInContext('isMonthlyRecordKey("2001ANN")', context), false, "text annual aggregate must be rejected");
+
 const series = [];
 for (let year = 2001; year <= 2025; year++) {
   for (let month = 1; month <= 12; month++) {
