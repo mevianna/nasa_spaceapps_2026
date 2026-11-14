@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Analise tendências e anomalias em dados ambientais mensais da NASA.">
+  <title>TerraTrend ML</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="TerraTrend ML — início">
+      <span class="brand-mark">TT</span>
+      <span>TerraTrend <em>ML</em></span>
+    </a>
+    <a class="source-link" href="https://power.larc.nasa.gov/" target="_blank" rel="noreferrer">Fonte: NASA POWER ↗</a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="eyebrow"><span></span> NASA Space Apps Challenge 2026</div>
+      <h1>O clima está mudando<br><i>onde você vive?</i></h1>
+      <p>Explore séries ambientais da NASA, meça tendências de longo prazo e encontre meses incomuns com aprendizado de máquina.</p>
+      <div class="hero-meta">
+        <span>2001—2025</span><span>Dados mensais</span><span>Modelo não supervisionado</span>
+      </div>
+    </section>
+
+    <section class="workspace" aria-labelledby="analysis-title">
+      <aside class="controls">
+        <div class="section-label">01 / Pergunta</div>
+        <h2 id="analysis-title">Defina sua investigação</h2>
+
+        <label for="city">Local</label>
+        <select id="city">
+          <option value="florianopolis">Florianópolis, SC</option>
+          <option value="manaus">Manaus, AM</option>
+          <option value="brasilia">Brasília, DF</option>
+          <option value="saopaulo">São Paulo, SP</option>
+        </select>
+
+        <label for="variable">Variável ambiental</label>
+        <select id="variable">
+          <option value="T2M">Temperatura média</option>
+          <option value="PRECTOTCORR">Precipitação</option>
+          <option value="ALLSKY_SFC_SW_DWN">Radiação solar</option>
+        </select>
+
+        <button id="analyze" type="button">
+          <span>Analisar tendência</span><span aria-hidden="true">→</span>
+        </button>
+        <p class="control-note">A consulta usa dados mensais reais. Nenhum valor científico é gerado por IA.</p>
+      </aside>
+
+      <div class="results">
+        <div id="status" class="status" role="status" aria-live="polite">
+          <span class="spinner"></span> Consultando a NASA POWER…
+        </div>
+
+        <div id="result-content" class="result-content is-hidden">
+          <div class="result-heading">
+            <div>
+              <div class="section-label">02 / Evidência</div>
+              <h2 id="result-title">Temperatura em Florianópolis</h2>
+            </div>
+            <span class="data-badge">NASA • MERRA-2 / CERES</span>
+          </div>
+
+          <div class="metrics">
+            <article class="metric primary">
+              <span>Tendência por década</span>
+              <strong id="slope">—</strong>
+              <small id="direction">—</small>
+            </article>
+            <article class="metric">
+              <span>Confiança estatística</span>
+              <strong id="significance">—</strong>
+              <small id="confidence">—</small>
+            </article>
+            <article class="metric">
+              <span>Anomalias por ML</span>
+              <strong id="anomaly-count">—</strong>
+              <small>Isolation Forest</small>
+            </article>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-legend">
+              <span><i class="dot observed"></i> Observado</span>
+              <span><i class="dot trend"></i> Tendência</span>
+              <span><i class="dot anomaly"></i> Anomalia</span>
+            </div>
+            <div id="chart" class="chart" role="img" aria-label="Série histórica e linha de tendência"></div>
+          </div>
+
+          <div class="explanation">
+            <div class="section-label">03 / Conclusão</div>
+            <p id="summary">—</p>
+            <details>
+              <summary>Como calculamos?</summary>
+              <p>Removemos o ciclo sazonal mensal, ajustamos uma regressão linear e calculamos um intervalo de confiança de 95%. Um Isolation Forest treinado com resíduos e mudanças mensais destaca observações incomuns. O modelo descreve o passado; não é uma previsão.</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>TerraTrend ML</span>
+    <p>Protótipo educacional. Resultados não substituem uma análise climatológica revisada por especialistas.</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>
