@@ -6,16 +6,29 @@ const CITIES = {
 };
 
 const VARIABLES = {
-  T2M: { name: "Temperatura média", unit: "°C", decimals: 2, source: "MERRA-2" },
-  PRECTOTCORR: { name: "Precipitação", unit: "mm/dia", decimals: 2, source: "MERRA-2" },
-  ALLSKY_SFC_SW_DWN: { name: "Radiação solar", unit: "kWh/m²/dia", decimals: 2, source: "CERES" }
+  T2M: {
+    name: "Average temperature", unit: "°C", decimals: 2, source: "MERRA-2",
+    help: "Average air temperature measured approximately two meters above the surface."
+  },
+  PRECTOTCORR: {
+    name: "Precipitation", unit: "mm/day", decimals: 2, source: "MERRA-2",
+    help: "The average amount of rain and other precipitation received per day during each month."
+  },
+  ALLSKY_SFC_SW_DWN: {
+    name: "Solar radiation", unit: "kWh/m²/day", decimals: 2, source: "CERES",
+    help: "The solar energy reaching a square meter of the surface each day, including cloudy conditions."
+  }
 };
 
 const $ = (id) => document.getElementById(id);
 const button = $("analyze");
 
 button.addEventListener("click", analyze);
-window.addEventListener("DOMContentLoaded", analyze);
+$("variable").addEventListener("change", updateVariableHelp);
+window.addEventListener("DOMContentLoaded", () => {
+  updateVariableHelp();
+  analyze();
+});
 
 async function analyze() {
   const city = CITIES[$("city").value];
@@ -36,10 +49,10 @@ async function analyze() {
     });
 
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`NASA POWER respondeu com status ${response.status}`);
+    if (!response.ok) throw new Error(`NASA POWER returned status ${response.status}`);
     const payload = await response.json();
     const values = payload?.properties?.parameter?.[variableKey];
-    if (!values) throw new Error("A resposta não contém a variável solicitada.");
+    if (!values) throw new Error("The response does not contain the requested variable.");
 
     const series = Object.entries(values)
       .filter(([key, value]) => isMonthlyRecordKey(key) && Number.isFinite(value) && value > -900)
@@ -52,14 +65,14 @@ async function analyze() {
       }))
       .sort((a, b) => a.key.localeCompare(b.key));
 
-    if (series.length < 60) throw new Error("A série retornada é curta demais para esta análise.");
+    if (series.length < 60) throw new Error("The returned time series is too short for this analysis.");
     const result = runAnalysis(series);
     render(city, variable, series, result);
     setLoading(false);
   } catch (error) {
     console.error(error);
     $("status").className = "status error";
-    $("status").innerHTML = `Não foi possível consultar os dados agora.<br>${escapeHtml(error.message)}<br><small>Tente novamente em alguns segundos.</small>`;
+    $("status").innerHTML = `We could not retrieve the data right now.<br>${escapeHtml(error.message)}<br><small>Please try again in a few seconds.</small>`;
     $("result-content").classList.add("is-hidden");
     button.disabled = false;
   }
@@ -154,20 +167,20 @@ function render(city, variable, series, result) {
   const { regression, adjusted, anomalyCount } = result;
   const decadeSlope = regression.slope * 10;
   const absSlope = Math.abs(decadeSlope).toFixed(variable.decimals);
-  const direction = decadeSlope > 0 ? "aumento" : decadeSlope < 0 ? "redução" : "estável";
+  const direction = decadeSlope > 0 ? "increase" : decadeSlope < 0 ? "decrease" : "no change";
 
   $("result-title").textContent = `${variable.name} em ${city.name}`;
   $("slope").textContent = `${decadeSlope > 0 ? "+" : ""}${decadeSlope.toFixed(variable.decimals)} ${variable.unit}`;
-  $("direction").textContent = `${direction} estimado por década`;
-  $("significance").textContent = regression.significant ? "Significativa" : "Inconclusiva";
-  $("confidence").textContent = `IC 95%: ±${(regression.ci * 10).toFixed(variable.decimals)} ${variable.unit}`;
-  $("anomaly-count").textContent = `${anomalyCount} meses`;
+  $("direction").textContent = `estimated ${direction} per decade`;
+  $("significance").textContent = regression.significant ? "Significant" : "Inconclusive";
+  $("confidence").textContent = `95% CI: ±${(regression.ci * 10).toFixed(variable.decimals)} ${variable.unit}`;
+  $("anomaly-count").textContent = `${anomalyCount} months`;
   document.querySelector(".data-badge").textContent = `NASA • ${variable.source}`;
 
   const significanceText = regression.significant
-    ? "O intervalo de confiança não inclui zero, então a direção da tendência é estatisticamente consistente."
-    : "O intervalo de confiança inclui zero, então os dados não sustentam uma direção clara para a tendência.";
-  $("summary").textContent = `Entre 2001 e 2025, a ${variable.name.toLowerCase()} em ${city.name} apresentou ${direction} estimado de ${absSlope} ${variable.unit} por década. ${significanceText} O modelo marcou ${anomalyCount} meses como incomuns.`;
+    ? "The confidence interval does not include zero, so the direction of the trend is statistically consistent."
+    : "The confidence interval includes zero, so the data does not support a clear trend direction.";
+  $("summary").textContent = `Between 2001 and 2025, ${variable.name.toLowerCase()} in ${city.name} showed an estimated ${direction} of ${absSlope} ${variable.unit} per decade. ${significanceText} The model identified ${anomalyCount} unusual months.`;
 
   renderChart(series, adjusted, regression, variable);
 }
@@ -197,17 +210,21 @@ function renderChart(series, adjusted, regression, variable) {
       ${years.map(year => { const i = series.findIndex(d => d.year === year); return `<text x="${x(Math.max(i,0))}" y="${height-10}" text-anchor="middle" fill="#7a837e" font-size="9" font-family="DM Mono">${year}</text>`; }).join("")}
     </svg>`;
   $("chart").innerHTML = svg;
-  $("chart").setAttribute("aria-label", `Série mensal de ${variable.name.toLowerCase()} de 2001 a 2025, com tendência e anomalias.`);
+  $("chart").setAttribute("aria-label", `Monthly ${variable.name.toLowerCase()} from 2001 to 2025, with trend and anomalies.`);
 }
 
 function setLoading(loading) {
   button.disabled = loading;
   $("status").className = loading ? "status" : "status is-hidden";
-  $("status").innerHTML = loading ? '<span class="spinner"></span> Consultando a NASA POWER…' : "";
+  $("status").innerHTML = loading ? '<span class="spinner"></span> Retrieving NASA POWER data…' : "";
   $("result-content").classList.toggle("is-hidden", loading);
 }
 
 function mean(values) { return values.reduce((a, b) => a + b, 0) / values.length; }
+function updateVariableHelp() {
+  const variable = VARIABLES[$("variable").value];
+  $("variable-help").querySelector("span").textContent = variable.help;
+}
 function isMonthlyRecordKey(key) {
   if (!/^\d{6}$/.test(key)) return false;
   const month = Number(key.slice(4, 6));

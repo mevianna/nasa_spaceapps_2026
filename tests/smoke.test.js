@@ -5,6 +5,7 @@ const assert = require("assert");
 const elements = new Map();
 function element(id) {
   if (!elements.has(id)) {
+    const childSpan = { textContent: "" };
     elements.set(id, {
       id,
       value: id === "city" ? "florianopolis" : id === "variable" ? "T2M" : "",
@@ -14,6 +15,7 @@ function element(id) {
       disabled: false,
       classList: { add() {}, toggle() {} },
       addEventListener() {},
+      querySelector: () => childSpan,
       setAttribute() {}
     });
   }
@@ -38,6 +40,8 @@ assert.strictEqual(vm.runInContext('isMonthlyRecordKey("200101")', context), tru
 assert.strictEqual(vm.runInContext('isMonthlyRecordKey("200112")', context), true, "December should be accepted");
 assert.strictEqual(vm.runInContext('isMonthlyRecordKey("200113")', context), false, "NASA annual aggregate must not be treated as month 13");
 assert.strictEqual(vm.runInContext('isMonthlyRecordKey("2001ANN")', context), false, "text annual aggregate must be rejected");
+vm.runInContext("updateVariableHelp()", context);
+assert(element("variable-help").querySelector("span").textContent.includes("temperature"), "educational variable help should render");
 
 const series = [];
 for (let year = 2001; year <= 2025; year++) {
