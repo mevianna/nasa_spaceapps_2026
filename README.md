@@ -2,6 +2,10 @@
 
 > **Follow the data. Find the trend.**
 
+## Live application
+
+**Explore TerraClue:** https://terraclue-2026.netlify.app/
+
 An educational MVP developed for the **Be An Earth System Trend Detective!** challenge at the 2026 NASA Space Apps Challenge.
 
 TerraClue helps high school and college students explore environmental change without requiring advanced climate science knowledge. The application retrieves real monthly NASA POWER data for four Brazilian cities and three Earth science variables. It explains long-term trends, statistical confidence, and unusual observations in accessible language.
