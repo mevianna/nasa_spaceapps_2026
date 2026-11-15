@@ -1,8 +1,10 @@
-# TerraTrend ML
+# TerraClue
+
+> **Follow the data. Find the trend.**
 
 An educational MVP developed for the **Be An Earth System Trend Detective!** challenge at the 2026 NASA Space Apps Challenge.
 
-TerraTrend ML helps high school and college students explore environmental change without requiring advanced climate science knowledge. The application retrieves real monthly NASA POWER data for four Brazilian cities and three Earth science variables. It explains long-term trends, statistical confidence, and unusual observations in accessible language.
+TerraClue helps high school and college students explore environmental change without requiring advanced climate science knowledge. The application retrieves real monthly NASA POWER data for four Brazilian cities and three Earth science variables. It explains long-term trends, statistical confidence, and unusual observations in accessible language.
 
 ## Run locally
 
